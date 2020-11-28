@@ -1,0 +1,13 @@
+{
+    "name": "puck-remote",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "MIT",
+    "dependencies": {
+        "@abandonware/noble": "^1.9.2-10",
+        "bluetooth-hci-socket": "npm:@abandonware/bluetooth-hci-socket@^0.5.3-6",
+        "blynk-library": "^0.5.4",
+        "noble": "^1.7.0"
+    },
+    "bin": "./index.js"
+}
