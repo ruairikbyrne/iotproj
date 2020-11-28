@@ -10,6 +10,8 @@ var blynk = new Blynk.Blynk(AUTH, options = {
 
 var pCount = 0;
 var nCount = 0;
+var commState = false;
+var behaveState = false;
 
 noble.on('stateChange', function(state) {
     if (state === 'poweredOn') {
@@ -46,44 +48,80 @@ noble.on('discover', function(peripheral) {
 
 });
 
-var v1 = new blynk.VirtualPin(1);
-var v2 = new blynk.VirtualPin(2);
-var v3 = new blynk.VirtualPin(3);
-var v4 = new blynk.VirtualPin(4)
-var v5 = new blynk.VirtualPin(5)
-var v6 = new blynk.VirtualPin(6);
+var v1 = new blynk.VirtualPin(1);  // Communications button
+var v2 = new blynk.VirtualPin(2);  // Communications positive output
+var v3 = new blynk.VirtualPin(3);  // Communications negative output
+var v4 = new blynk.VirtualPin(4);  // Social skills button
+var v5 = new blynk.VirtualPin(5);  // Social skills positive output
+var v6 = new blynk.VirtualPin(6);  // Social skills negative output
 var v8 = new blynk.VirtualPin(8);
 var v9 = new blynk.VirtualPin(9);
 
+// Communications button
 v1.on('write', function(param) {
   console.log('V1 Communications: ', param[0]);
+  if (param[0] == 1) {
+    // Communications positive
+    if ((commState == false) && (param[0] ==1)) {  // button switched on, reset counters
+      console.log("Reset Counter, set comm state to true");
+      commState = true;
+      pCount = 0;
+      nCount = 0;
+    }
+    console.log("Comm state before writeback - ", commState);
+
+    v2.on('read', function() {
+      if (commState  == true) {
+        console.log("Update pCount - ", commState);
+        v2.write(pCount);
+      }
+    });
+
+    // Communications negative
+    v3.on('read', function() {
+      if (commState == true) {
+        console.log("Update nCount, commState - ", commState);
+        v3.write(nCount);
+      }
+    });
+    
+  }
+  else {
+    commState = false;
+    console.log("Comms button switched off, commState: ", commState);
+
+    v2.on('read', function() {
+      if (commState  == false) {
+        console.log("Update pCount - ", commState);
+        v2.write(0);
+      }
+    });
+
+    // Communications negative
+    v3.on('read', function() {
+      if (commState == false) {
+        console.log("Update nCount, commState - ", commState);
+        v3.write(0);
+      }
+    })
+
+  }
 });
 
-
-v2.on('read', function() {
-  v2.write(pCount);
-});
-
-
-v3.on('read', function() {
-  v3.write(nCount);
-});
-
-
+// Social skills button
 v4.on('write', function(param) {
   console.log('V4 Social Skills: ', param[0]);
 });
 
-
+// Social skills positive
 v5.on('read', function() {
   v5.write('Positive Social');
 });
 
-
+// Social skills negative
 v6.on('read', function() {
   v6.write('Negative Socail');
 });
-
 
 
 v8.on('write', function(param) {
