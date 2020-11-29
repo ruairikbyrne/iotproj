@@ -11,7 +11,7 @@ var blynk = new Blynk.Blynk(AUTH, options = {
 var pCount = 0;
 var nCount = 0;
 var commState = false;
-var behaveState = false;
+var socialState = false;
 
 noble.on('stateChange', function(state) {
     if (state === 'poweredOn') {
@@ -108,20 +108,77 @@ v1.on('write', function(param) {
   }
 });
 
+
+
+
+
 // Social skills button
+
 v4.on('write', function(param) {
   console.log('V4 Social Skills: ', param[0]);
+  if (param[0] == 1) {
+    // Social  positive
+    if ((socialState == false) && (param[0] ==1)) {  // button switched on, reset counters
+      console.log("Reset Counter, set social state to true");
+      socialState = true;
+      pCount = 0;
+      nCount = 0;
+    }
+    console.log("Social state before writeback - ", socialState);
+
+    v5.on('read', function() {
+      if (socialState  == true) {
+        console.log("Update pCount - ", socialState);
+        v5.write(pCount);
+      }
+    });
+
+    // Social negative
+    v6.on('read', function() {
+      if (socialState == true) {
+        console.log("Update nCount, socialState - ", socialState);
+        v6.write(nCount);
+      }
+    });
+    
+  }
+  else {
+    socialState = false;
+    console.log("Social skills button switched off, socialState: ", socialState);
+
+    v5.on('read', function() {
+      if (socialState  == false) {
+        console.log("Update pCount - ", socialState);
+        v5.write(0);
+      }
+    });
+
+    // Social negative
+    v6.on('read', function() {
+      if (socialState == false) {
+        console.log("Update nCount, socialState - ", socialState);
+        v6.write(0);
+      }
+    })
+
+  }
 });
 
-// Social skills positive
-v5.on('read', function() {
-  v5.write('Positive Social');
-});
 
-// Social skills negative
-v6.on('read', function() {
-  v6.write('Negative Socail');
-});
+
+//v4.on('write', function(param) {
+//  console.log('V4 Social Skills: ', param[0]);
+//});
+
+//// Social skills positive
+//v5.on('read', function() {
+//  v5.write('Positive Social');
+//});
+
+//// Social skills negative
+//v6.on('read', function() {
+//  v6.write('Negative Socail');
+//});
 
 
 v8.on('write', function(param) {
