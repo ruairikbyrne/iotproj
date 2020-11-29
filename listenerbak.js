@@ -63,15 +63,11 @@ noble.on('discover', function(peripheral) {
           if (d.data[0]==10) {
 	    pCount = pCount + 1;
 	    console.log('Positive Count: ', pCount);
-	    snaResult = "Positive";
-	    addRecord(calcDateTime(), analysis, snaResult);
 	    btnPos = true;
 	  }
           if (d.data[0]==20) {
 	    nCount = nCount + 1;
 	    console.log('Negative Count: ', nCount);
-	    snaResult = "Negative";
-	    addRecord(calcDateTime(), analysis, snaResult);
 	    btnNeg = true;
 	  }
 	}
@@ -84,15 +80,16 @@ var v3 = new blynk.VirtualPin(3);  // Communications negative output
 var v4 = new blynk.VirtualPin(4);  // Social skills button
 var v5 = new blynk.VirtualPin(5);  // Social skills positive output
 var v6 = new blynk.VirtualPin(6);  // Social skills negative output
-
+var v8 = new blynk.VirtualPin(8);
+var v9 = new blynk.VirtualPin(9);
 
 // Communications button
 v1.on('write', function(param) {
-  //console.log('V1 Communications: ', param[0]);
+  console.log('V1 Communications: ', param[0]);
   if (param[0] == 1) {
     // Communications positive
     if ((commState == false) && (param[0] ==1)) {  // button switched on, reset counters
-      //console.log("Reset Counter, set comm state to true");
+      console.log("Reset Counter, set comm state to true");
       commState = true;
       pCount = 0;
       nCount = 0;
@@ -100,27 +97,39 @@ v1.on('write', function(param) {
     }
     v2.on('read', function() {
       if ((commState  == true) && (btnPos == true)) {
-        //console.log("Update pCount - ", commState);
+        console.log("Update pCount - ", commState);
+	var now = new Date();
+	var date = now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
+	var time = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+	dateTime = date+' '+time;
+	snaResult = "Positive";
         v2.write(pCount);
 	btnPos = false;
+	addRecord(dateTime, analysis, snaResult);
       }
     });
     // Communications negative
     v3.on('read', function() {
       if ((commState == true) && (btnNeg == true)) {
-        //console.log("Update nCount - ", commState);
+        console.log("Update nCount - ", commState);
+	var now = new Date();
+	var date = now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
+	var time = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+	dateTime = date+' '+time;
+        snaResult = "Negative";
         v3.write(nCount);
 	btnNeg = false;
+	addRecord(dateTime, analysis, snaResult);
       }
     });
   }
   else {
     commState = false;
-    //console.log("Comms button switched off, commState: ", commState);
+    console.log("Comms button switched off, commState: ", commState);
 
     v2.on('read', function() {
       if (commState  == false) {
-        //console.log("Comms Off Set pCount to zero ");
+        console.log("Comms Off Set pCount to zero ");
         v2.write(0);
 	btnPos = false;
       }
@@ -128,7 +137,7 @@ v1.on('write', function(param) {
     // Communications negative
     v3.on('read', function() {
       if (commState == false) {
-        //console.log("Comms Off Set nCount to zero ", commState);
+        console.log("Comms Off Set nCount to zero ", commState);
         v3.write(0);
 	btnNeg = false;
       }
@@ -144,7 +153,7 @@ v4.on('write', function(param) {
   if (param[0] == 1) {
     // Social Skills positive
     if ((socialState == false) && (param[0] == 1)) {  // button switched on, reset counters
-      //console.log("Reset Counter, set social state to true");
+      console.log("Reset Counter, set social state to true");
       socialState = true;
       pCount = 0;
       nCount = 0;
@@ -152,17 +161,29 @@ v4.on('write', function(param) {
     }
     v5.on('read', function() {
       if ((socialState  == true) && (btnPos == true)) {
-        //console.log("Update pCount - ", socialState);
+        console.log("Update pCount - ", socialState);
+	var now = new Date();
+	var date = now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
+	var time = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+	dateTime = date+' '+time;
+	snaResult = "Positive";
         v5.write(pCount);
 	btnPos = false;
+	addRecord(dateTime, analysis, snaResult);
       }
     });
     // Social Skills negative
     v6.on('read', function() {
       if ((socialState == true) && (btnNeg == true)) {
-        //console.log("Update nCount - ", socialState);
+        console.log("Update nCount - ", socialState);
+	var now = new Date();
+	var date = now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
+	var time = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+	dateTime = date+' '+time;
+        snaResult = "Negative";
         v6.write(nCount);
 	btnNeg = false;
+	addRecord(dateTime, analysis, snaResult);
       }
     });
   }
@@ -204,13 +225,15 @@ function addRecord(dateTime, analysis, snaResult) {
  }
 
 
-function calcDateTime() {
-  var now = new Date();
-  var date = now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
-  var time = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
-  dateTime = date+' '+time;
-  return dateTime;
-}
 
 
+
+
+v8.on('write', function(param) {
+  console.log('V8:', param[0]);
+});
+
+v9.on('read', function() {
+  v9.write(new Date().getSeconds());
+});
 
