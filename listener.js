@@ -2,32 +2,19 @@
 var noble = require('noble');
 var Blynk = require('blynk-library');
 var firebase = require('firebase');
+var ThingSpeakClient = require('thingspeakclient');
+var client = new ThingSpeakClient();
+var myWriteKey = 'MN0X1W260ZN0WYHQ';
+var channelId = 1248267;
 
-var AUTH = 'khf8FvQsQCyB5A5SpYj_SYpdddhm_T3u';
+//var AUTH = 'khf8FvQsQCyB5A5SpYj_SYpdddhm_T3u';
 
 var blynk = new Blynk.Blynk(AUTH, options = {
   connector : new Blynk.TcpClient()
 });
 
-// Firebase project configuration
-var firebaseConfig = {
-  apiKey: "AIzaSyCLU-hCjYlScrIZ9lNegLeWQWAf2wog-zI",
-  authDomain: "iotproj-36b54.firebaseapp.com",
-  databaseURL: "https://iotproj-36b54.firebaseio.com",
-  projectId: "iotproj-36b54",
-  storageBucket: "iotproj-36b54.appspot.com",
-  messagingSenderId: "353757548712",
-  appId: "1:353757548712:web:d2e28082ba2c9808a3f29d",
-  measurementId: "G-ZR4J0E9T8H"
-};
-
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-
-var database = firebase.database();
-
-
+//Connect to thingspeak channel
+client.attachChannel(channelId, { writeKey: myWriteKey}, callBackThingspeak);
 
 
 var pCount = 0;
@@ -39,6 +26,12 @@ var dateTime;
 var commState = false;
 var socialState = false;
 var analysis;
+
+var eventDate;
+var eventTime;
+var eventWeek;
+var eventMonth;
+var eventYear;
 
 noble.on('stateChange', function(state) {
     if (state === 'poweredOn') {
@@ -64,14 +57,40 @@ noble.on('discover', function(peripheral) {
 	    pCount = pCount + 1;
 	    console.log('Positive Count: ', pCount);
 	    snaResult = "Positive";
-	    addRecord(calcDateTime(), analysis, snaResult);
+	    now = new Date();
+	    //eventDate = now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
+	    eventDate = now.getDate();
+	    //eventTime = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+	    eventTime = now.getTime();
+	    eventWeek = now.getWeek();
+	    eventMonth = now.getMonth();
+	    eventYear = now.getWeekYear();
+	    //console.log("Date: ", eventDate);
+	    //console.log("Time: ", eventTime);
+	    //console.log("Week: ", eventWeek);
+	    //console.log("Month: ", eventMonth);
+	    //console.log("Year: ", eventYear);
+	    addRecord(analysis, snaResult, eventDate, eventTime, eventWeek, eventMonth, eventYear);
 	    btnPos = true;
 	  }
           if (d.data[0]==20) {
 	    nCount = nCount + 1;
 	    console.log('Negative Count: ', nCount);
 	    snaResult = "Negative";
-	    addRecord(calcDateTime(), analysis, snaResult);
+	    now = new Date();
+	    //eventDate = now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
+	    eventDate = now.getDate();
+	    //eventTime = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+	    eventTime = now.getTime();
+	    eventWeek = now.getWeek();
+	    eventMonth = now.getMonth();
+	    eventYear = now.getWeekYear();
+	    //console.log("Date: ", eventDate);
+	    //console.log("Time: ", eventTime);
+	    //console.log("Week: ", eventWeek);
+	    //console.log("Month: ", eventMonth);
+	    //console.log("Year: ", eventYear);
+	    addRecord(analysis, snaResult, eventDate, eventTime, eventWeek, eventMonth, eventYear);
 	    btnNeg = true;
 	  }
 	}
@@ -190,27 +209,71 @@ console.log("Exiting social skills if");
 });
 
 
+//function calcDateTime() {
+//  var now = new Date();
+//  var date = now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
+//  var time = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+//  dateTime = date+' '+time;
+//  return dateTime;
+//}
 
-
-
-function addRecord(dateTime, analysis, snaResult) {
-  console.log("Sending record to firebase database");
-  firebase.database().ref('results/').push({
-    recordDate: dateTime,
-    analysisType: analysis,
-    result: snaResult
+function addRecord(analysis, snaResult, eventDate, eventTime, eventWeek, eventMonth, eventYear) {
+  client.updateChannel(channelId, {field1: analysis, field2: snaResult, field3: eventDate, field4:eventTime, field5:eventWeek, 
+	field6:eventMonth, field7:eventYear}, function(err, resp){
+	if (!err && resp > 0) {
+		console.log('update successfully. Entry number was: ' + resp);
+	}
+	else {
+	  console.log(err);
+	}
   });
-  pushResult = false;
- }
+ };
 
 
-function calcDateTime() {
-  var now = new Date();
-  var date = now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
-  var time = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
-  dateTime = date+' '+time;
-  return dateTime;
+//function calcDateTime() {
+//  now = new Date();
+//  eventDate = now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
+//  eventTime = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+//  eventWeek = now.getWeek();
+//  eventMonth = now.getMonth();
+//  eventYear = now.getYear();
+  //dateTime = date+' '+time;
+  //return dateTime;
+//}
+
+
+
+function callBackThingspeak(err, resp)
+{
+    if (!err && resp > 0) {
+        console.log('Successfully. response was: ' + resp);
+    }
+    else {
+      console.log(err);
+    }
 }
 
 
+// This script is released to the public domain and may be used, modified and
+// distributed without restrictions. Attribution not necessary but appreciated.
+// Source: https://weeknumber.net/how-to/javascript
 
+// Returns the ISO week of the date.
+Date.prototype.getWeek = function() {
+  var date = new Date(this.getTime());
+  date.setHours(0, 0, 0, 0);
+  // Thursday in current week decides the year.
+  date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+  // January 4 is always in week 1.
+  var week1 = new Date(date.getFullYear(), 0, 4);
+  // Adjust to Thursday in week 1 and count number of weeks from date to week1.
+  return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000
+                        - 3 + (week1.getDay() + 6) % 7) / 7);
+}
+
+// Returns the four-digit year corresponding to the ISO week of the date.
+Date.prototype.getWeekYear = function() {
+  var date = new Date(this.getTime());
+  date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+  return date.getFullYear();
+}
