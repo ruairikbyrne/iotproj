@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 var noble = require('noble');
 var Blynk = require('blynk-library');
-var firebase = require('firebase');
 var ThingSpeakClient = require('thingspeakclient');
 var client = new ThingSpeakClient();
 var myWriteKey = 'MN0X1W260ZN0WYHQ';
 var channelId = 1248267;
 
-//var AUTH = 'khf8FvQsQCyB5A5SpYj_SYpdddhm_T3u';
+var AUTH = 'khf8FvQsQCyB5A5SpYj_SYpdddhm_T3u';
 
 var blynk = new Blynk.Blynk(AUTH, options = {
   connector : new Blynk.TcpClient()
@@ -63,13 +62,14 @@ noble.on('discover', function(peripheral) {
 	    //eventTime = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
 	    eventTime = now.getTime();
 	    eventWeek = now.getWeek();
-	    eventMonth = now.getMonth();
-	    eventYear = now.getWeekYear();
+	    eventMonth = now.getMonth()+1;
+	    eventYear = now.getFullYear();
 	    //console.log("Date: ", eventDate);
 	    //console.log("Time: ", eventTime);
 	    //console.log("Week: ", eventWeek);
 	    //console.log("Month: ", eventMonth);
 	    //console.log("Year: ", eventYear);
+	    console.log("Analysis: ", analysis);
 	    addRecord(analysis, snaResult, eventDate, eventTime, eventWeek, eventMonth, eventYear);
 	    btnPos = true;
 	  }
@@ -83,13 +83,14 @@ noble.on('discover', function(peripheral) {
 	    //eventTime = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
 	    eventTime = now.getTime();
 	    eventWeek = now.getWeek();
-	    eventMonth = now.getMonth();
-	    eventYear = now.getWeekYear();
+	    eventMonth = now.getMonth()+1;
+	    eventYear = now.getFullYear();
 	    //console.log("Date: ", eventDate);
 	    //console.log("Time: ", eventTime);
 	    //console.log("Week: ", eventWeek);
 	    //console.log("Month: ", eventMonth);
 	    //console.log("Year: ", eventYear);
+	    console.log("Analysis: ", analysis);
 	    addRecord(analysis, snaResult, eventDate, eventTime, eventWeek, eventMonth, eventYear);
 	    btnNeg = true;
 	  }
