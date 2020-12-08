@@ -57,10 +57,8 @@ noble.on('discover', function(peripheral) {
 	    console.log('Positive Count: ', pCount);
 	    snaResult = "Positive";
 	    now = new Date();
-	    //eventDate = now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
-	    eventDate = now.getDate();
-	    //eventTime = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
-	    eventTime = now.getTime();
+	    eventDate = calcDate();
+	    eventTime = calcTime();
 	    eventWeek = now.getWeek();
 	    eventMonth = now.getMonth()+1;
 	    eventYear = now.getFullYear();
@@ -69,7 +67,7 @@ noble.on('discover', function(peripheral) {
 	    //console.log("Week: ", eventWeek);
 	    //console.log("Month: ", eventMonth);
 	    //console.log("Year: ", eventYear);
-	    console.log("Analysis: ", analysis);
+	    //console.log("Analysis: ", analysis);
 	    addRecord(analysis, snaResult, eventDate, eventTime, eventWeek, eventMonth, eventYear);
 	    btnPos = true;
 	  }
@@ -78,10 +76,8 @@ noble.on('discover', function(peripheral) {
 	    console.log('Negative Count: ', nCount);
 	    snaResult = "Negative";
 	    now = new Date();
-	    //eventDate = now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
-	    eventDate = now.getDate();
-	    //eventTime = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
-	    eventTime = now.getTime();
+	    eventDate = calcDate();
+	    eventTime = calcTime();
 	    eventWeek = now.getWeek();
 	    eventMonth = now.getMonth()+1;
 	    eventYear = now.getFullYear();
@@ -90,7 +86,7 @@ noble.on('discover', function(peripheral) {
 	    //console.log("Week: ", eventWeek);
 	    //console.log("Month: ", eventMonth);
 	    //console.log("Year: ", eventYear);
-	    console.log("Analysis: ", analysis);
+	    //console.log("Analysis: ", analysis);
 	    addRecord(analysis, snaResult, eventDate, eventTime, eventWeek, eventMonth, eventYear);
 	    btnNeg = true;
 	  }
@@ -164,7 +160,7 @@ v4.on('write', function(param) {
   if (param[0] == 1) {
     // Social Skills positive
     if ((socialState == false) && (param[0] == 1)) {  // button switched on, reset counters
-      //console.log("Reset Counter, set social state to true");
+      console.log("Reset Counter, set social state to true");
       socialState = true;
       pCount = 0;
       nCount = 0;
@@ -172,7 +168,7 @@ v4.on('write', function(param) {
     }
     v5.on('read', function() {
       if ((socialState  == true) && (btnPos == true)) {
-        //console.log("Update pCount - ", socialState);
+        console.log("Update pCount - ", socialState);
         v5.write(pCount);
 	btnPos = false;
       }
@@ -180,7 +176,7 @@ v4.on('write', function(param) {
     // Social Skills negative
     v6.on('read', function() {
       if ((socialState == true) && (btnNeg == true)) {
-        //console.log("Update nCount - ", socialState);
+        console.log("Update nCount - ", socialState);
         v6.write(nCount);
 	btnNeg = false;
       }
@@ -210,13 +206,25 @@ console.log("Exiting social skills if");
 });
 
 
-//function calcDateTime() {
-//  var now = new Date();
-//  var date = now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
-//  var time = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
-//  dateTime = date+' '+time;
-//  return dateTime;
-//}
+function calcDate() {
+  var now = new Date();
+  var dd = String(now.getDate()).padStart(2, '0');
+  var mm = String(now.getMonth() + 1).padStart(2, '0');
+  var yyyy = now.getFullYear();
+  var calculatedDate = dd + '/' + mm + '/' + yyyy;
+  return calculatedDate;
+}
+
+function calcTime() {
+  var now = new Date();
+  var hh = String(now.getHours()).padStart(2, '0');
+  var mm = String(now.getMinutes()).padStart(2, '0');
+  var ss = String(now.getSeconds()).padStart(2, '0');
+  var calculatedTime = hh  + ":" + mm + ":" + ss;
+  return calculatedTime;
+}
+
+
 
 function addRecord(analysis, snaResult, eventDate, eventTime, eventWeek, eventMonth, eventYear) {
   client.updateChannel(channelId, {field1: analysis, field2: snaResult, field3: eventDate, field4:eventTime, field5:eventWeek, 
@@ -229,19 +237,6 @@ function addRecord(analysis, snaResult, eventDate, eventTime, eventWeek, eventMo
 	}
   });
  };
-
-
-//function calcDateTime() {
-//  now = new Date();
-//  eventDate = now.getFullYear()+'-'+(now.getMonth()+1)+'-'+now.getDate();
-//  eventTime = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
-//  eventWeek = now.getWeek();
-//  eventMonth = now.getMonth();
-//  eventYear = now.getYear();
-  //dateTime = date+' '+time;
-  //return dateTime;
-//}
-
 
 
 function callBackThingspeak(err, resp)
