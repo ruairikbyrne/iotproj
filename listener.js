@@ -1,13 +1,27 @@
 #!/usr/bin/env node
-var noble = require('noble');
-var Blynk = require('blynk-library');
-var ThingSpeakClient = require('thingspeakclient');
+var noble = require('noble');		//Import bluetooth low energy library
+var Blynk = require('blynk-library');	//Import blynk library
+var ThingSpeakClient = require('thingspeakclient'); //Import thingspeak library
 var client = new ThingSpeakClient();
-var myWriteKey = 'MN0X1W260ZN0WYHQ';
-var channelId = 1248267;
+var myWriteKey = 'MN0X1W260ZN0WYHQ';  	//Thingspeak write key
+var channelId = 1248267;		//Thingspeak channel id
+var AUTH = 'khf8FvQsQCyB5A5SpYj_SYpdddhm_T3u'; //Blynk id
+var pCount = 0;			//track count single button press
+var nCount = 0;			//track count double button press
+var btnPos = false;		//track single button press ie positive action
+var btnNeg = false;		//track double button press ie negative action
+var snaResult;
+var dateTime;
+var commState = false;
+var socialState = false;
+var analysis;
+var eventDate;
+var eventTime;
+var eventWeek;
+var eventMonth;
+var eventYear;
 
-var AUTH = 'khf8FvQsQCyB5A5SpYj_SYpdddhm_T3u';
-
+//Connect to Blynk
 var blynk = new Blynk.Blynk(AUTH, options = {
   connector : new Blynk.TcpClient()
 });
@@ -16,22 +30,7 @@ var blynk = new Blynk.Blynk(AUTH, options = {
 client.attachChannel(channelId, { writeKey: myWriteKey}, callBackThingspeak);
 
 
-var pCount = 0;
-var nCount = 0;
-var btnPos = false;
-var btnNeg = false;
-var snaResult;
-var dateTime;
-var commState = false;
-var socialState = false;
-var analysis;
-
-var eventDate;
-var eventTime;
-var eventWeek;
-var eventMonth;
-var eventYear;
-
+//Connect to bluetooth device - puck.js
 noble.on('stateChange', function(state) {
     if (state === 'poweredOn') {
         noble.startScanning([], true);
@@ -40,6 +39,7 @@ noble.on('stateChange', function(state) {
     }
 });
 
+//capture input from the puck.js
 var lastData = {};
 noble.on('discover', function(peripheral) {
     // console.log("----------------");
@@ -52,7 +52,7 @@ noble.on('discover', function(peripheral) {
         if (lastData[peripheral.id][d.uuid] !== d.data[0]) {
             lastData[peripheral.id][d.uuid] = d.data[0];
             console.log(peripheral.id,d.uuid, d.data[0]);
-          if (d.data[0]==10) {
+          if (d.data[0]==10) {		//single click on the puck
 	    pCount = pCount + 1;
 	    console.log('Positive Count: ', pCount);
 	    snaResult = "Positive";
@@ -62,16 +62,11 @@ noble.on('discover', function(peripheral) {
 	    eventWeek = now.getWeek();
 	    eventMonth = now.getMonth()+1;
 	    eventYear = now.getFullYear();
-	    //console.log("Date: ", eventDate);
-	    //console.log("Time: ", eventTime);
-	    //console.log("Week: ", eventWeek);
-	    //console.log("Month: ", eventMonth);
-	    //console.log("Year: ", eventYear);
-	    //console.log("Analysis: ", analysis);
+	    //add record to thingspeak
 	    addRecord(analysis, snaResult, eventDate, eventTime, eventWeek, eventMonth, eventYear);
 	    btnPos = true;
 	  }
-          if (d.data[0]==20) {
+          if (d.data[0]==20) {		//double click on the puck
 	    nCount = nCount + 1;
 	    console.log('Negative Count: ', nCount);
 	    snaResult = "Negative";
@@ -81,12 +76,7 @@ noble.on('discover', function(peripheral) {
 	    eventWeek = now.getWeek();
 	    eventMonth = now.getMonth()+1;
 	    eventYear = now.getFullYear();
-	    //console.log("Date: ", eventDate);
-	    //console.log("Time: ", eventTime);
-	    //console.log("Week: ", eventWeek);
-	    //console.log("Month: ", eventMonth);
-	    //console.log("Year: ", eventYear);
-	    //console.log("Analysis: ", analysis);
+	    //add record to thingspeak
 	    addRecord(analysis, snaResult, eventDate, eventTime, eventWeek, eventMonth, eventYear);
 	    btnNeg = true;
 	  }
@@ -102,110 +92,87 @@ var v5 = new blynk.VirtualPin(5);  // Social skills positive output
 var v6 = new blynk.VirtualPin(6);  // Social skills negative output
 
 
-// Communications button
+// Communications button function Blynk
 v1.on('write', function(param) {
-  //console.log('V1 Communications: ', param[0]);
   if (param[0] == 1) {
-    // Communications positive
     if ((commState == false) && (param[0] ==1)) {  // button switched on, reset counters
-      //console.log("Reset Counter, set comm state to true");
-      commState = true;
+      commState = true;  	//set behaviour being monitored
       pCount = 0;
       nCount = 0;
       analysis = "Communications";
     }
     v2.on('read', function() {
       if ((commState  == true) && (btnPos == true)) {
-        //console.log("Update pCount - ", commState);
-        v2.write(pCount);
+        v2.write(pCount);	//Update blynk virtual pin for positive outcome
 	btnPos = false;
       }
     });
     // Communications negative
     v3.on('read', function() {
       if ((commState == true) && (btnNeg == true)) {
-        //console.log("Update nCount - ", commState);
-        v3.write(nCount);
+        v3.write(nCount);	//Update blynk virtual pin for negative outcome
 	btnNeg = false;
       }
     });
   }
   else {
     commState = false;
-    //console.log("Comms button switched off, commState: ", commState);
-
     v2.on('read', function() {
       if (commState  == false) {
-        //console.log("Comms Off Set pCount to zero ");
-        v2.write(0);
-	btnPos = false;
+         v2.write(0);		//if communications not being monitored set virtual pin to zero
       }
     });
     // Communications negative
     v3.on('read', function() {
       if (commState == false) {
-        //console.log("Comms Off Set nCount to zero ", commState);
-        v3.write(0);
-	btnNeg = false;
+        v3.write(0);		//if communications not being monitroed set virtual pin to zero
       }
     })
   }
-console.log("Exiting communtications if");
 });
 
 
-// Social Skills button
+// Social Skills button function Blynk
 v4.on('write', function(param) {
-  console.log('V4 Social Skills: ', param[0]);
   if (param[0] == 1) {
-    // Social Skills positive
     if ((socialState == false) && (param[0] == 1)) {  // button switched on, reset counters
-      console.log("Reset Counter, set social state to true");
-      socialState = true;
+      socialState = true;	//set behaviour being monitored
       pCount = 0;
       nCount = 0;
       analysis = "Social Skills";
     }
     v5.on('read', function() {
       if ((socialState  == true) && (btnPos == true)) {
-        console.log("Update pCount - ", socialState);
-        v5.write(pCount);
+        v5.write(pCount);	//Update blynk virtual pin for positive outcome
 	btnPos = false;
       }
     });
     // Social Skills negative
     v6.on('read', function() {
       if ((socialState == true) && (btnNeg == true)) {
-        console.log("Update nCount - ", socialState);
-        v6.write(nCount);
+        v6.write(nCount);	//Update blynk virtual pin for negative outcome
 	btnNeg = false;
       }
     });
   }
   else {
     socialState = false;
-    console.log("Social button switched off, socialState: ", socialState);
-
     v5.on('read', function() {
       if (socialState  == false) {
-        console.log("Social button off set pCount to zero ");
-        v5.write(0);
-	btnPos = false;
+        v5.write(0);		//if social skills not being monitored set virtual pin to zero
       }
     });
     // Social Skills negative
     v6.on('read', function() {
       if (socialState == false) {
-        console.log("Social button off set nCount to zero");
-        v6.write(0);
-	btnNeg = false;
+        v6.write(0);		//if social skills not being monitored set virtual pin to zero
       }
     })
   }
-console.log("Exiting social skills if");
 });
 
 
+//calculate date in the format of dd/mm/yyyy
 function calcDate() {
   var now = new Date();
   var dd = String(now.getDate()).padStart(2, '0');
@@ -215,6 +182,7 @@ function calcDate() {
   return calculatedDate;
 }
 
+//calculate time in the format hh:mm:ss
 function calcTime() {
   var now = new Date();
   var hh = String(now.getHours()).padStart(2, '0');
@@ -224,8 +192,7 @@ function calcTime() {
   return calculatedTime;
 }
 
-
-
+//add record to thingspeak
 function addRecord(analysis, snaResult, eventDate, eventTime, eventWeek, eventMonth, eventYear) {
   client.updateChannel(channelId, {field1: analysis, field2: snaResult, field3: eventDate, field4:eventTime, field5:eventWeek, 
 	field6:eventMonth, field7:eventYear}, function(err, resp){
