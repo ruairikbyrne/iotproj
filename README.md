@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # iotproj
 IoT Project - Clicker Tracking System
 
@@ -26,7 +27,7 @@ Tools, Technologies and Equipment
 •	A raspberryPi will act as a master/central device which will collect data from a slave device.
 •	A puck-js will act as a slave/peripheral device which the SNA will use as a replacement for the clickers.  The puck-js is a BLE device.
 •	The puck-js will be programmed using java script.
-•	The listener on the raspberryPi will be programmed using javascript.  It will use MQTT to transfer data to an online storage solution.
+•	The listener on the raspberryPi will be programmed using python/java script.  It will use MQTT to transfer data to an online storage solution.
 •	Data will be stored in a firebase database from where it can be interrogated, and dashboards will be presented.
 
 Project Repository
